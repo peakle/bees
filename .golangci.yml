@@ -7,6 +7,9 @@ issues:
   max-same-issues: 10
 linters:
   enable:
+    - asciicheck
+    - contextcheck
+    - reassign
     - govet
     - unused
     - gosimple

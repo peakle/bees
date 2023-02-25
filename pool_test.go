@@ -134,7 +134,7 @@ func TestWait(t *testing.T) {
 		WithCapacity(testCount),
 	)
 
-	task := func(ctx context.Context) { time.Sleep(time.Second); atomic.AddInt64(counter, 1) }
+	task := func(ctx context.Context) { time.Sleep(time.Millisecond); atomic.AddInt64(counter, 1) }
 	stopper := ptrOfInt64(0)
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -168,7 +168,7 @@ func TestOnPanic(t *testing.T) {
 	)
 	pool.SetLogger(log.New(io.Discard, "", 0))
 
-	task := func(ctx context.Context) { time.Sleep(time.Second); panic("foo") }
+	task := func(ctx context.Context) { time.Sleep(time.Millisecond); panic("foo") }
 	stopper := ptrOfInt64(0)
 	var wg sync.WaitGroup
 	wg.Add(1)

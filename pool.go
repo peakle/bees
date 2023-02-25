@@ -84,7 +84,7 @@ func (wp *WorkerPool) Submit(task func(context.Context)) {
 	}
 
 	wp.retrieveWorker()
-	wp.taskCh <- task
+	wp.taskCh <- task // TODO: may optimize blocking send
 	atomic.AddInt64(wp.taskCount, 1)
 }
 
@@ -153,7 +153,7 @@ func (wp *WorkerPool) retrieveWorker() {
 	active := atomic.LoadInt64(wp.activeWorkers)
 	free := atomic.LoadInt64(wp.freeWorkers)
 
-	if free == 0 && active < max {
+	if free <= 1 && active < max {
 		if atomic.CompareAndSwapInt64(wp.activeWorkers, active, active+1) {
 			wp.spawnWorker()
 		}
