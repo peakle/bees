@@ -17,7 +17,6 @@ type WorkerPool struct {
 	workersCapacity *int64
 
 	taskCh chan func(ctx context.Context)
-	rand   *rand.Rand
 
 	cfg         *config
 	shutdownCtx context.Context
@@ -62,7 +61,6 @@ func Create(ctx context.Context, opts ...Option) *WorkerPool {
 		taskCount:       ptrOfInt64(0),
 		workersCapacity: ptrOfInt64(cfg.Capacity),
 		taskCh:          make(chan func(context.Context), 2*cfg.Capacity),
-		rand:            rand.New(rand.NewSource(time.Now().UnixNano())),
 		cfg:             &cfg,
 		shutdownCtx:     ctx,
 		cancelFunc:      cancel,
@@ -165,9 +163,11 @@ func (wp *WorkerPool) spawnWorker() {
 	wp.wg.Add(1)
 
 	go func() {
+		// jitter depends on global rand state, but it's not the ok here
+		jitter := func() time.Duration { return time.Millisecond * time.Duration(rand.Int63n(wp.cfg.TimeoutJitter)) }
 		// https://en.wikipedia.org/wiki/Exponential_backoff
 		// nolint:gosec
-		ticker := time.NewTicker(wp.cfg.KeepAliveTimeout + time.Millisecond*time.Duration(wp.rand.Int63n(wp.cfg.TimeoutJitter)))
+		ticker := time.NewTicker(wp.cfg.KeepAliveTimeout + jitter())
 		defer ticker.Stop()
 
 		defer func() {
@@ -198,7 +198,7 @@ func (wp *WorkerPool) spawnWorker() {
 			case <-ticker.C:
 				return
 			}
-			ticker.Reset(wp.cfg.KeepAliveTimeout + time.Millisecond*time.Duration(wp.rand.Int63n(wp.cfg.TimeoutJitter)))
+			ticker.Reset(wp.cfg.KeepAliveTimeout + jitter())
 		}
 	}()
 }

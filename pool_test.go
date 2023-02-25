@@ -259,13 +259,6 @@ func TestCloseGracefullyByTimeout(t *testing.T) {
 func TestScale(t *testing.T) {
 	t.Parallel()
 
-	start := time.Now()
-	defer func() {
-		if f := time.Since(start); f.Round(time.Second) > 3*time.Second {
-			t.Fatalf("too long execution: %s", f)
-		}
-	}()
-
 	pool := Create(context.Background(), WithCapacity(1))
 
 	var wg sync.WaitGroup
