@@ -1,0 +1,16 @@
+run:
+  skip-dirs:
+    - .github
+    - git-hooks
+issues:
+  max-issues-per-linter: 10
+  max-same-issues: 10
+linters:
+  enable:
+    - govet
+    - unused
+    - gosimple
+    - gocyclo
+    - staticcheck
+    - revive
+    - gofmt
