@@ -28,21 +28,34 @@ Bees - simple and lightweight worker pool for go.
 ## Examples:
 
 ```go
+package main
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/peakle/bees"
+)
+
 // Example - demonstrate pool usage
 func Example() {
-    pool := Create(context.Background())
-
-    defer pool.Close()
+	pool := bees.Create(context.Background())
+	defer pool.Close()
 
 	t := 1
-	task := func(ctx context.Context) { t++; fmt.Println(t) }
-    pool.Submit(task)
-    pool.Submit(task)
-    pool.Submit(task)
+	task := func(ctx context.Context) {
+		t++
+		fmt.Println(t)
+	}
+	pool.Submit(task)
+	pool.Submit(task)
+	pool.Submit(task)
 
-    // Output:
-    // 1
-    // 2
-    // 3
+	pool.Wait()
+	// Output:
+	// 1
+	// 2
+	// 3
 }
+
 ```

@@ -207,27 +207,6 @@ func TestOnPanic(t *testing.T) {
 	}
 }
 
-// func TestCloseGracefully(t *testing.T) {
-// 	runtime.GOMAXPROCS(4)
-// 	counter := ptrOfInt64(0)
-// 	pool := Create(
-// 		context.Background(),
-// 		WithJitter(1),
-// 		WithKeepAlive(time.Minute),
-// 		WithCapacity(100),
-// 		WithGracefulTimeout(5*time.Second),
-// 	)
-//
-// 	task := func(ctx context.Context) { time.Sleep(time.Second); atomic.AddInt64(counter, 1) }
-// 	for i := 0; i < 100; i++ {
-// 		pool.Submit(task)
-// 	}
-// 	pool.CloseGracefully()
-//
-// 	if c := atomic.LoadInt64(counter); c != 100 {
-// 		t.Fatalf("counter not equal: %d", c)
-// 	}
-// }
 func TestCloseGracefullyByTimeout(t *testing.T) {
 	t.Parallel()
 
