@@ -20,7 +20,10 @@ const (
 	benchRunTimes = 10000000
 )
 
+// memory usage: 1034 MB
 func BenchmarkSemaphore(b *testing.B) {
+	runtime.GOMAXPROCS(2)
+
 	var wg sync.WaitGroup
 	sema := make(chan struct{}, poolSize)
 
@@ -42,7 +45,10 @@ func BenchmarkSemaphore(b *testing.B) {
 	b.Logf("memory usage:%d MB", checkMem())
 }
 
+// memory usage: 963 MB
 func BenchmarkGoroutines(b *testing.B) {
+	runtime.GOMAXPROCS(2)
+
 	var wg sync.WaitGroup
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -60,7 +66,10 @@ func BenchmarkGoroutines(b *testing.B) {
 	b.Logf("memory usage:%d MB", checkMem())
 }
 
+// memory usage: 27 MB
 func BenchmarkWorkerPool(b *testing.B) {
+	runtime.GOMAXPROCS(2)
+
 	var wg sync.WaitGroup
 
 	p := Create(context.Background(), WithCapacity(poolSize), WithKeepAlive(5*time.Second))

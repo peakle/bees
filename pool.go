@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"math/rand"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -82,19 +83,8 @@ func (wp *WorkerPool) Submit(task func(context.Context)) {
 	}
 
 	wp.retrieveWorker()
-	wp.taskCh <- task // TODO: may optimize blocking send
-	atomic.AddInt64(wp.taskCount, 1)
-}
-
-// SubmitAsync - submit task to pool, for async better use this method
-func (wp *WorkerPool) SubmitAsync(task func(context.Context)) {
-	if atomic.LoadInt64(wp.isClosed) == 1 {
-		return
-	}
-
-	wp.retrieveWorker()
 	select {
-	case wp.taskCh <- task:
+	case wp.taskCh <- task: // TODO: may be need to optimize blocking send?
 		atomic.AddInt64(wp.taskCount, 1)
 	case <-wp.shutdownCtx.Done():
 	}
@@ -147,19 +137,21 @@ func (wp *WorkerPool) Scale(delta int64) {
 }
 
 func (wp *WorkerPool) retrieveWorker() {
-	max := atomic.LoadInt64(wp.workersCapacity)
-	active := atomic.LoadInt64(wp.activeWorkers)
-	free := atomic.LoadInt64(wp.freeWorkers)
+	if atomic.LoadInt64(wp.freeWorkers) > 1 {
+		runtime.Gosched()
+		return
+	}
 
-	if free <= 1 && active < max {
-		if atomic.CompareAndSwapInt64(wp.activeWorkers, active, active+1) {
-			wp.spawnWorker()
-		}
+	if atomic.LoadInt64(wp.activeWorkers) < atomic.LoadInt64(wp.workersCapacity) {
+		// more safe will be use CAS here,
+		// but I think it's ok, if we will have some deviation in 1-3 goroutines from max capacity
+		wp.spawnWorker()
 	}
 }
 
 func (wp *WorkerPool) spawnWorker() {
 	atomic.AddInt64(wp.freeWorkers, 1)
+	atomic.AddInt64(wp.activeWorkers, 1)
 	wp.wg.Add(1)
 
 	go func() {

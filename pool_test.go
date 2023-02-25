@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -26,7 +27,7 @@ func TestClose(t *testing.T) {
 
 	for i := 0; i < 100; i++ {
 		go pool.Submit(emptyTask)
-		go pool.SubmitAsync(emptyTask)
+		go pool.Submit(emptyTask)
 	}
 
 	pool.Close()
@@ -55,7 +56,7 @@ func TestShutdownWithStacked(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			pool.SubmitAsync(task)
+			pool.Submit(task)
 		}()
 	}
 
@@ -208,20 +209,19 @@ func TestOnPanic(t *testing.T) {
 }
 
 func TestCloseGracefully(t *testing.T) {
-	t.Parallel()
-
+	runtime.GOMAXPROCS(4)
 	counter := ptrOfInt64(0)
 	pool := Create(
 		context.Background(),
 		WithJitter(1),
 		WithKeepAlive(time.Minute),
 		WithCapacity(100),
-		WithGracefulTimeout(time.Minute),
+		WithGracefulTimeout(10*time.Second),
 	)
 
 	task := func(ctx context.Context) { time.Sleep(time.Second); atomic.AddInt64(counter, 1) }
 	for i := 0; i < 100; i++ {
-		pool.SubmitAsync(task)
+		pool.Submit(task)
 	}
 	pool.CloseGracefully()
 
@@ -246,7 +246,7 @@ func TestCloseGracefullyByTimeout(t *testing.T) {
 		atomic.AddInt64(counter, 1)
 	}
 	for i := 0; i < 100; i++ {
-		go pool.SubmitAsync(task)
+		go pool.Submit(task)
 	}
 	start := time.Now()
 	pool.CloseGracefully()
