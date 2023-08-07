@@ -10,6 +10,7 @@ type config struct {
 	KeepAliveTimeout time.Duration
 	TimeoutJitter    int64 // additional random timeout in ms
 	GracefulTimeout  time.Duration
+	TaskChLen        int
 }
 
 type logger interface {
@@ -63,4 +64,14 @@ func WithGracefulTimeout(t time.Duration) Option {
 
 func (t gracefulTimeout) apply(cfg *config) {
 	cfg.GracefulTimeout = time.Duration(t)
+}
+
+type taskChLen int
+
+func WithTaskLen(t int) Option {
+	return taskChLen(t)
+}
+
+func (t taskChLen) apply(cfg *config) {
+	cfg.TaskChLen = int(t)
 }

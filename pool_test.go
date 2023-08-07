@@ -165,6 +165,7 @@ func TestOnPanic(t *testing.T) {
 		context.Background(),
 		WithJitter(1),
 		WithCapacity(testCount),
+		WithTaskLen(0),
 	)
 	pool.SetLogger(log.New(io.Discard, "", 0))
 
@@ -217,6 +218,7 @@ func TestCloseGracefullyByTimeout(t *testing.T) {
 		WithKeepAlive(time.Minute),
 		WithCapacity(1),
 		WithGracefulTimeout(3*time.Second),
+		WithTaskLen(2),
 	)
 
 	task := func(ctx context.Context) {
