@@ -173,7 +173,10 @@ func (wp *WorkerPool) spawnWorker() {
 					go wp.retrieveWorker()
 				}
 
-				wp.logger.Printf("on WorkerPool: on Process: %+v", err)
+				stack := make([]byte, 2048)
+				runtime.Stack(stack, false)
+
+				wp.logger.Printf("on WorkerPool: on Process: %+v, stack: %s", err, string(stack))
 				return
 			}
 		}()
